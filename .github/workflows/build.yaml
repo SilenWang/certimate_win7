@@ -55,7 +55,7 @@ jobs:
 
   build_certimate:
     needs: [watch_release, trigger_build]
-    if: ${{ needs.watch_release.result }} != 'skipped' || ${{ needs.trigger_build.result }} != 'skipped'
+    if: needs.watch_release.result != 'skipped' || needs.trigger_build.result != 'skipped'
     runs-on: self-hosted
     steps:
       - name: Set tag
