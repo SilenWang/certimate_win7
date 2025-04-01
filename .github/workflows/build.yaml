@@ -121,6 +121,12 @@ jobs:
           chmod a+x ${{ github.workspace }}/go_win7/pkg/tool/linux_amd64/*
           make windows/amd64 windows/arm64
 
+      - name: Compress output
+        working-directory: ./certimate/${{ steps.folder.outputs.folder }}/build
+        run: |
+          7zz -tzip a certimate_windows_amd64.zip certimate_windows_amd64
+          7zz -tzip a certimate_windows_arm64.zip certimate_windows_arm64
+
       - name: Release
         uses: ncipollo/release-action@v1.15.0
         with:
@@ -128,6 +134,6 @@ jobs:
           generateReleaseNotes: true  #自动生成发行说明。
           owner: "SilenWang"
           repo: "certimate_win7"
-          artifacts: '${{ github.workspace }}/certimate/${{ steps.folder.outputs.folder }}/build/*windows*'
+          artifacts: '${{ github.workspace }}/certimate/${{ steps.folder.outputs.folder }}/build/*windows*.zip'
           tag: ${{ steps.set_tag.outputs.tag }}
           name: Release for certimate ${{ steps.set_tag.outputs.tag }}
