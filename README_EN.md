@@ -1,3 +1,5 @@
+[![BUILD](https://github.com/SilenWang/certimate_win7/actions/workflows/build.yaml/badge.svg)](https://github.com/SilenWang/certimate_win7/actions/workflows/build.yaml)
+
 [中文](README.md) | [English](README_EN.md)
 
 > [!WARNING]
