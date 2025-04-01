@@ -114,7 +114,7 @@ jobs:
       - name: Build Go Binary
         working-directory: ./certimate/${{ steps.folder.outputs.folder }}
         run: |
-          echo "${{ github.workspace }}/go_win7/bin" >> $GITHUB_PATH
+          export PATH="${{ github.workspace }}/go_win7/bin":$PATH
           make
 
       - name: Release
