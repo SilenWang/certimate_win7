@@ -1,0 +1,115 @@
+name: BUILD
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # 每6小时检查一次
+  workflow_dispatch:     # 允许手动触发
+    inputs:
+      tags:
+        description: 'Version tag to build'
+        required: true
+        type: string
+
+jobs:
+  watch_release:
+    if: github.event_name == 'schedule'
+    runs-on: self-hosted
+    steps:
+      - name: Get latest release from origin
+        id: origin_release
+        uses: pozetroninc/github-action-get-latest-release@master
+        with:
+          owner: usual2970
+          repo: certimate
+          excludes: prerelease, draft
+
+      - name: Check if existed in thie repo
+        id: check_release
+        uses: joutvhu/get-release@v1
+        with:
+          tag_name: ${{ steps.origin_release.outputs.release }}
+        continue-on-error: true
+
+      - name: Save watch info
+        id: save_watch
+        run: |
+            if [ ${{ steps.check_release.outcome }} == 'failure' ];then
+              echo "New release detected!"
+              echo "build=true" >> $GITHUB_OUTPUT
+              echo "tag=${{ steps.origin_release.outputs.release }}" >> $GITHUB_OUTPUT
+            else
+              echo "No new release"
+            fi
+
+  trigger_build:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: self-hosted
+    steps:
+      - name: Save info
+        id: save_info
+        run: |
+            echo "Trigger new build!"
+            echo "build=true" >> $GITHUB_OUTPUT
+            echo "tag=${{ github.event.inputs.tags }}" >> $GITHUB_OUTPUT
+
+  build_certimate:
+    needs: [watch_release, trigger_build]
+    if: needs.watch_release.outputs.build == 'true' || needs.trigger_build.outputs.build == 'true'
+    runs-on: self-hosted
+    steps:
+      - name: Set tag
+        id: set_tag
+        run: |
+          # 根据条件选择tag值
+          if [ "${{ needs.watch_release.outputs.build }}" = "true" ]; then
+            echo "tag=${{ needs.watch_release.outputs.tag }}" >> $GITHUB_OUTPUT
+          elif [ "${{ needs.trigger_build.outputs.build }}" = "true" ]; then
+            echo "tag=${{ needs.trigger_build.outputs.tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "No tag available"
+            exit 1
+          fi
+      
+      - name: Download target certimate
+        uses: robinraju/release-downloader@v1.11
+        with:
+          repository: 'usual2970/certimate'
+          tag: ${{ steps.set_tag.outputs.tag }}
+          zipBall: true
+          out-file-path: 'certimate'
+          extract: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.11.0
+
+      - name: Build Admin dashboard UI
+        working-directory: ./certimate
+        run: npm --prefix=./ui ci && npm --prefix=./ui run build
+      
+      - name: Download latest release from go-win7
+        uses: robinraju/release-downloader@v1.11
+        with:
+          repository: 'XTLS/go-win7'
+          latest: true
+          fileName: '*linux-amd64.zip'
+          out-file-path: 'go_win7'
+          extract: true
+
+      - name: Build Go Binary
+        working-directory: ./certimate
+        run: |
+          echo "${{ github.workspace }}/go_win7" >> $GITHUB_PATH
+          make
+
+      - name: Release
+        uses: ncipollo/release-action@v1.15.0
+        with:
+          draft: false
+          generateReleaseNotes: true  #自动生成发行说明。
+          owner: "SilenWang"
+          repo: "certimate_win7"
+          artifacts: 'certimate/${{ github.workspace }}/build/*windows*'
+          tag: ${{ steps.set_tag.outputs.tag }}
+          name: Release for certimate ${{ steps.set_tag.outputs.tag }}
