@@ -116,6 +116,7 @@ jobs:
         run: |
           export PATH="${{ github.workspace }}/go_win7/bin":$PATH
           chmod a+x ${{ github.workspace }}/go_win7/bin/*
+          chmod a+x ${{ github.workspace }}/go_win7/pkg/tool/linux_amd64/*
           make
 
       - name: Release
