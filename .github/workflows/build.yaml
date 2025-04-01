@@ -61,7 +61,7 @@ jobs:
 
   build_certimate:
     needs: [watch_release, trigger_build]
-    if: needs.watch_release.outputs.build == 'true' || needs.trigger_build.outputs.build == 'true'
+    if: always()
     runs-on: self-hosted
     steps:
       - name: Set tag
