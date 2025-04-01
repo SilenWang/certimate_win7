@@ -14,6 +14,8 @@ jobs:
   watch_release:
     if: github.event_name == 'schedule'
     runs-on: self-hosted
+    permissions:
+      contents: write
     steps:
       - name: Get latest release from origin
         id: origin_release
@@ -126,6 +128,6 @@ jobs:
           generateReleaseNotes: true  #自动生成发行说明。
           owner: "SilenWang"
           repo: "certimate_win7"
-          artifacts: 'certimate/${{ steps.folder.outputs.folder }}/build/*windows*'
+          artifacts: '${{ github.workspace }}/certimate/${{ steps.folder.outputs.folder }}/build/*windows*'
           tag: ${{ steps.set_tag.outputs.tag }}
           name: Release for certimate ${{ steps.set_tag.outputs.tag }}
