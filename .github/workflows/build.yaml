@@ -51,6 +51,7 @@ jobs:
             echo "Trigger new build!"
             echo "build=true" >> $GITHUB_OUTPUT
             echo "tag=${{ github.event.inputs.tags }}" >> $GITHUB_OUTPUT
+            echo "Tag: ${{ github.event.inputs.tags }}"
 
   build_certimate:
     needs: [watch_release, trigger_build]
