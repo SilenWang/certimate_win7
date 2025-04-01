@@ -115,6 +115,7 @@ jobs:
         working-directory: ./certimate/${{ steps.folder.outputs.folder }}
         run: |
           export PATH="${{ github.workspace }}/go_win7/bin":$PATH
+          chmod a+x ${{ github.workspace }}/go_win7/bin/*
           make
 
       - name: Release
