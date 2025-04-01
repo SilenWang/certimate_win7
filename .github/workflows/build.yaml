@@ -117,7 +117,7 @@ jobs:
           export PATH="${{ github.workspace }}/go_win7/bin":$PATH
           chmod a+x ${{ github.workspace }}/go_win7/bin/*
           chmod a+x ${{ github.workspace }}/go_win7/pkg/tool/linux_amd64/*
-          make
+          make windows/amd64 windows/arm64
 
       - name: Release
         uses: ncipollo/release-action@v1.15.0
@@ -126,6 +126,6 @@ jobs:
           generateReleaseNotes: true  #自动生成发行说明。
           owner: "SilenWang"
           repo: "certimate_win7"
-          artifacts: 'certimate/${{ github.workspace }}/build/*windows*'
+          artifacts: 'certimate/${{ steps.folder.outputs.folder }}/build/*windows*'
           tag: ${{ steps.set_tag.outputs.tag }}
           name: Release for certimate ${{ steps.set_tag.outputs.tag }}
