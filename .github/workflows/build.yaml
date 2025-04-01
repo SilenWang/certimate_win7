@@ -40,6 +40,9 @@ jobs:
             else
               echo "No new release"
             fi
+    outputs:
+      build: ${{ steps.save_watch.outputs.build }}
+      tag: ${{ steps.save_watch.outputs.tag }}
 
   trigger_build:
     if: github.event_name == 'workflow_dispatch'
@@ -52,10 +55,13 @@ jobs:
             echo "build=true" >> $GITHUB_OUTPUT
             echo "tag=${{ github.event.inputs.tags }}" >> $GITHUB_OUTPUT
             echo "Tag: ${{ github.event.inputs.tags }}"
+    outputs:
+      build: ${{ steps.save_info.outputs.build }}
+      tag: ${{ steps.save_info.outputs.tag }}
 
   build_certimate:
     needs: [watch_release, trigger_build]
-    if: always() && (needs.watch_release.result != 'skipped' || needs.trigger_build.result != 'skipped')
+    if: needs.watch_release.outputs.build == 'true' || needs.trigger_build.outputs.build == 'true'
     runs-on: self-hosted
     steps:
       - name: Set tag
