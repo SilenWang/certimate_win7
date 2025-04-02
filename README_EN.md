@@ -16,3 +16,4 @@ Therefore, this project aims to use a [third-party Win7-compatible Go version](h
 - [x] Write the initial Release Workflow
 - [x] Manually specify the latest version v2 and build the release.
 - [x] Modify the Workflow to track releases from the original repository and generate corresponding compatible versions
+- [ ] Prepare the container for the build runner.

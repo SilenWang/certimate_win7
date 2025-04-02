@@ -16,3 +16,4 @@
 - [x] 编写初版Release Workflow
 - [x] 手动指定最后一版v2，编译生成release
 - [x] 修改Workflow以追踪原代码库发布，生成相应的兼容版本
+- [ ] 准备构建用runner的容器
