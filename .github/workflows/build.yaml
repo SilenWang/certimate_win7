@@ -11,7 +11,7 @@ on:
         type: string
 
 jobs:
-  watch_release:
+  schedule_trigger:
     if: github.event_name == 'schedule'
     runs-on: self-hosted
     steps:
@@ -30,61 +30,68 @@ jobs:
           tag_name: ${{ steps.origin_release.outputs.release }}
         continue-on-error: true
 
-      - name: Save watch info
-        id: save_watch
+      - name: Save info
+        id: save_info
         run: |
             if [ ${{ steps.check_release.outcome }} == 'failure' ];then
               echo "New release detected!"
-              echo "build=true" >> $GITHUB_OUTPUT
               echo "tag=${{ steps.origin_release.outputs.release }}" >> $GITHUB_OUTPUT
             else
               echo "No new release"
             fi
     outputs:
-      build: ${{ steps.save_watch.outputs.build }}
-      tag: ${{ steps.save_watch.outputs.tag }}
+      tag: ${{ steps.save_info.outputs.tag }}
 
-  trigger_build:
+  manual_trigger:
     if: github.event_name == 'workflow_dispatch'
     runs-on: self-hosted
     steps:
       - name: Save info
         id: save_info
         run: |
-            echo "Trigger new build!"
-            echo "build=true" >> $GITHUB_OUTPUT
-            echo "tag=${{ github.event.inputs.tags }}" >> $GITHUB_OUTPUT
+            echo "Force trigger new build!"
             echo "Tag: ${{ github.event.inputs.tags }}"
+            echo "tag=${{ github.event.inputs.tags }}" >> $GITHUB_OUTPUT
+
     outputs:
-      build: ${{ steps.save_info.outputs.build }}
+      tag: ${{ steps.save_info.outputs.tag }}
+
+  build_trigger:
+    needs: [schedule_trigger, manual_trigger] # 检查两个trigger的情况
+    if: always() # 保持运行防止依赖跳过导致本任务不执行
+    runs-on: self-hosted
+    steps:
+      - name: Save info
+        id: save_info
+        # 定时触发，只有tag不存在才进行
+        run: |
+            echo "Check trigger and tag"
+
+            if [[ -z ${{ needs.schedule_trigger.outputs.tag }} ]];then
+              echo "New tag detected from schedule"
+              echo "tag=${{ needs.schedule_trigger.outputs.tag }}" >> $GITHUB_OUTPUT
+            elif [[ -z ${{ needs.manual_trigger.outputs.tag }} ]] ;then
+              echo "New tag detected from dispatch"
+              echo "tag=${{ needs.manual_trigger.outputs.tag }}" >> $GITHUB_OUTPUT
+            else
+              echo "No new release"
+            fi
+    outputs:
       tag: ${{ steps.save_info.outputs.tag }}
 
   build_certimate:
-    needs: [watch_release, trigger_build]
+    needs: [build_trigger]
     permissions:
       contents: write
-    if: always()
     runs-on: self-hosted
     steps:
-      - name: Set tag
-        id: set_tag
-        run: |
-          # 根据条件选择tag值
-          if [ "${{ needs.watch_release.outputs.build }}" = "true" ]; then
-            echo "tag=${{ needs.watch_release.outputs.tag }}" >> $GITHUB_OUTPUT
-          elif [ "${{ needs.trigger_build.outputs.build }}" = "true" ]; then
-            echo "tag=${{ needs.trigger_build.outputs.tag }}" >> $GITHUB_OUTPUT
-          else
-            echo "No tag available"
-            exit 1
-          fi
       
       - name: Download target certimate
         id: download
         uses: robinraju/release-downloader@v1.11
         with:
           repository: 'usual2970/certimate'
-          tag: ${{ steps.set_tag.outputs.tag }}
+          tag: ${{ needs.build_trigger.outputs.tag }}
           zipBall: true
           out-file-path: 'certimate'
           extract: true
@@ -138,5 +145,8 @@ jobs:
           owner: "SilenWang"
           repo: "certimate_win7"
           artifacts: '${{ github.workspace }}/certimate/${{ steps.folder.outputs.folder }}/build/*windows*.zip'
-          tag: ${{ steps.set_tag.outputs.tag }}
-          name: Release for certimate ${{ steps.set_tag.outputs.tag }}
+          removeArtifacts: true
+          replacesArtifacts: true
+          allowUpdates: true
+          tag: ${{ needs.build_trigger.outputs.tag }}
+          name: Release for certimate ${{ needs.build_trigger.outputs.tag }}
