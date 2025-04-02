@@ -70,12 +70,13 @@ jobs:
             schedule_trigger=${{ needs.schedule_trigger.outputs.tag }}
             manual_trigger=${{ needs.manual_trigger.outputs.tag }}
 
-            if [[ -z $schedule_trigger ]];then
-              echo "New tag detected from schedule"
-              echo tag=$schedule_trigger >> $GITHUB_OUTPUT
-            elif [[ -z $manual_trigger ]] ;then
+            # -z check if empty
+            if [[ -z "$schedule_trigger" ]];then
               echo "New tag detected from dispatch"
-              echo tag=$manual_trigger >> $GITHUB_OUTPUT
+              echo "tag=$manual_trigger" >> $GITHUB_OUTPUT
+            elif [[ -z "$manual_trigger" ]] ;then
+              echo "New tag detected from schedule"
+              echo "tag=$schedule_trigger" >> $GITHUB_OUTPUT
             else
               echo "No new release"
             fi
@@ -84,6 +85,7 @@ jobs:
 
   build_certimate:
     needs: [build_trigger]
+    if: ${{ needs.build_trigger.outputs.tag == ''  || needs.build_trigger.outputs.tag == null }}
     permissions:
       contents: write
     runs-on: self-hosted
