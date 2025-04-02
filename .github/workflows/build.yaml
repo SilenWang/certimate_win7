@@ -124,8 +124,11 @@ jobs:
       - name: Compress output
         working-directory: ./certimate/${{ steps.folder.outputs.folder }}/build
         run: |
-          7zz -tzip a certimate_windows_amd64.zip certimate_windows_amd64
-          7zz -tzip a certimate_windows_arm64.zip certimate_windows_arm64
+          mv certimate_windows_amd64 certimate_windows_amd64.exe
+          7zz -tzip a certimate_windows_amd64.zip certimate_windows_amd64.exe
+
+          mv certimate_windows_arm64 certimate_windows_arm64.exe
+          7zz -tzip a certimate_windows_arm64.zip certimate_windows_arm64.exe
 
       - name: Release
         uses: ncipollo/release-action@v1.15.0
