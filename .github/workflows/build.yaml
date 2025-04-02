@@ -85,7 +85,7 @@ jobs:
 
   build_certimate:
     needs: [build_trigger]
-    if: ${{ needs.build_trigger.outputs.tag == ''  || needs.build_trigger.outputs.tag == null }}
+    if: ${{ needs.build_trigger.outputs.tag != ''  || needs.build_trigger.outputs.tag != null }}
     permissions:
       contents: write
     runs-on: self-hosted
