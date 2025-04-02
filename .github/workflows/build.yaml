@@ -83,9 +83,9 @@ jobs:
     outputs:
       tag: ${{ steps.save_info.outputs.tag }}
 
-  build_certimate:
+  build_certimate: # 跳过似乎会向下传导，不加always, 两个trigger之一被跳过就会不执行build
     needs: [build_trigger]
-    if: ${{ needs.build_trigger.outputs.tag != ''  || needs.build_trigger.outputs.tag != null }}
+    if: always() && (${{ needs.build_trigger.outputs.tag != ''  || needs.build_trigger.outputs.tag != null }})
     permissions:
       contents: write
     runs-on: self-hosted
