@@ -35,7 +35,7 @@ jobs:
       - name: Save info
         id: save_info
         run: |
-            if [ ${{ steps.check_release.outcome }} == 'failure' ];then
+            if [ ${{ steps.check_release.outputs.tag_name }} != ${{ steps.origin_release.outputs.release }} ];then
               echo "New release detected!"
               echo "tag=${{ steps.origin_release.outputs.release }}" >> $GITHUB_OUTPUT
             else
