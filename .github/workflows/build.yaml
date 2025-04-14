@@ -35,7 +35,8 @@ jobs:
       - name: Save info
         id: save_info
         run: |
-            if [ ${{ steps.check_release.outputs.tag_name }} != ${{ steps.origin_release.outputs.release }} ];then
+            schedule_trigger=${{ steps.check_release.outputs.tag_name }}
+            if [ -z "$schedule_trigger" ];then
               echo "New release detected!"
               echo "tag=${{ steps.origin_release.outputs.release }}" >> $GITHUB_OUTPUT
             else
